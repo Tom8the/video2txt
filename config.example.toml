@@ -1,0 +1,53 @@
+[ffmpeg]
+ffmpeg_path = "ffmpeg"
+ffprobe_path = "ffprobe"
+
+[asr]
+engine = "faster-whisper"
+model_path = "models/faster-whisper-small"
+language = "zh"
+device = "cpu"
+compute_type = "int8"
+cpu_threads = 4
+beam_size = 5
+vad_filter = true
+word_timestamps = true
+condition_on_previous_text = false
+
+[alignment]
+time_weight = 0.55
+text_weight = 0.35
+confidence_weight = 0.10
+match_threshold = 0.55
+review_threshold = 0.72
+include_unmatched_hard_subtitles = false
+
+[ocr]
+enabled = false
+engine = "paddleocr"
+language = "ch"
+device = "cpu"
+detection_model_name = "PP-OCRv5_mobile_det"
+recognition_model_name = "PP-OCRv5_mobile_rec"
+sample_interval = 1.2
+crop_top = 0.78
+crop_bottom = 0.94
+scale = 1
+min_confidence = 0.55
+image_change_threshold = 0.12
+signature_left = 0.20
+signature_right = 0.80
+signature_top = 0.15
+signature_bottom = 0.92
+signature_edge_threshold = 45
+text_center_left = 0.10
+text_center_right = 0.90
+text_center_top = 0.10
+text_center_bottom = 0.98
+text_min_height_ratio = 0.20
+text_min_width_ratio = 0.025
+progress_interval_frames = 5
+
+[paths]
+work_dir = "work"
+output_dir = "output"

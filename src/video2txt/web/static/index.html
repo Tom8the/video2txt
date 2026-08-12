@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Video2Txt · 视频转写工作台</title>
+    <meta
+      name="description"
+      content="本地优先的视频音频转写与字幕融合工作台"
+    />
+    <link rel="stylesheet" href="/styles.css?v=20260723-batch-reset" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Video2Txt 首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Video2Txt</span>
+      </a>
+      <div class="engine-pill" id="engine-pill">
+        <span class="status-dot"></span>
+        <span id="engine-label">正在检查本地引擎</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow"><span>LOCAL-FIRST</span> 音频与字幕双通道校对</div>
+        <h1>把视频里的声音，<br /><em>整理成可信文本。</em></h1>
+        <p>
+          本地提取音轨并转写；检测到字幕时，按时间轴逐段对照，保留每一次融合依据。
+        </p>
+        <div class="trust-row" aria-label="产品特性">
+          <span>文件不出本机</span><span>词级时间戳</span><span>TXT · SRT</span>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="转写工作台">
+        <form id="task-form" class="control-card">
+          <div class="card-heading">
+            <div>
+              <span class="step-number">01</span>
+              <h2>添加素材</h2>
+            </div>
+            <span class="file-limit">最多 30 个 · 单个 5 GB</span>
+          </div>
+
+          <label class="dropzone" id="media-dropzone" for="media-input">
+            <input
+              id="media-input"
+              name="media"
+              type="file"
+              accept="video/*,audio/*,.mkv,.flac,.m4a"
+              multiple
+              required
+            />
+            <span class="upload-glyph" aria-hidden="true">↗</span>
+            <strong id="media-title">批量拖入视频或音频</strong>
+            <span id="media-meta">支持一次选择多个 MP4、MKV、MOV、MP3、WAV</span>
+          </label>
+
+          <div class="secondary-upload">
+            <div>
+              <label for="subtitle-input">外挂字幕 <span>可选</span></label>
+              <p id="subtitle-name">可批量选择，按同名媒体自动配对</p>
+            </div>
+            <label class="small-button" for="subtitle-input">
+              选择文件
+              <input
+                id="subtitle-input"
+                name="subtitles"
+                type="file"
+                accept=".srt,.ass,.ssa,.vtt"
+                multiple
+              />
+            </label>
+          </div>
+
+          <label class="feature-toggle" id="ocr-toggle">
+            <input id="hard-subtitles-input" name="hard_subtitles" type="checkbox" value="true" />
+            <span class="toggle-track" aria-hidden="true"><i></i></span>
+            <span class="toggle-copy">
+              <b>识别画面硬字幕</b>
+              <small id="ocr-hint">使用本地轻量 OCR，任务中会显示逐帧处理进度</small>
+            </span>
+          </label>
+
+          <fieldset>
+            <legend>输出方式</legend>
+            <div class="mode-grid">
+              <label class="mode-option">
+                <input type="radio" name="mode" value="verbatim" checked />
+                <span><b>逐字稿</b><small>保留原话，字幕用于纠错</small></span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="mode" value="subtitle" />
+                <span><b>字幕稿</b><small>字幕优先，ASR 补充遗漏</small></span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="mode" value="clean" />
+                <span><b>整理稿</b><small>对比后去填充、去重复、补标点并分段</small></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <button class="primary-button" id="submit-button" type="submit">
+            <span>开始批量提取与转写</span><b aria-hidden="true">→</b>
+          </button>
+          <div class="upload-progress" id="upload-progress" hidden>
+            <span id="upload-progress-bar"></span>
+          </div>
+          <p class="form-error" id="form-error" role="alert"></p>
+        </form>
+
+        <section class="result-card" aria-live="polite">
+          <div class="card-heading">
+            <div>
+              <span class="step-number">02</span>
+              <h2>批次进度</h2>
+            </div>
+            <span class="task-state" id="task-state">等待素材</span>
+          </div>
+
+          <div class="empty-result" id="empty-result">
+            <div class="waveform" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <h3>任务队列将在这里展开</h3>
+            <p>批量上传后逐项查看进度，完成后可单独预览或一键打包导出。</p>
+          </div>
+
+          <div class="batch-result" id="batch-result" hidden>
+            <div class="batch-overview">
+              <div><small>任务总数</small><strong id="batch-total">0</strong></div>
+              <div><small>已完成</small><strong id="batch-completed">0</strong></div>
+              <div><small>失败</small><strong id="batch-failed">0</strong></div>
+            </div>
+            <div class="batch-progress"><span id="batch-progress-bar"></span></div>
+            <p class="batch-estimate" id="batch-estimate">预计完成时间：等待任务提交</p>
+            <div class="queue-list" id="queue-list"></div>
+            <div class="batch-actions">
+              <p class="task-hint">任务按顺序在本机处理，可以保留此页面继续运行。</p>
+              <div class="export-controls">
+                <span>下载类型</span>
+                <label class="export-option"><input type="checkbox" data-batch-export-type value="text" checked /><i></i>文本文件</label>
+                <label class="export-option"><input type="checkbox" data-batch-export-type value="subtitle" /><i></i>字幕文件</label>
+                <a id="batch-export" class="batch-export" aria-disabled="true">批量下载</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="completed-result" id="completed-result" hidden>
+            <button class="detail-back" id="completed-back" type="button" hidden>← 返回任务队列</button>
+            <div class="result-summary">
+              <div><small>状态</small><strong>已完成</strong></div>
+              <div><small>输出模式</small><strong id="completed-mode">逐字稿</strong></div>
+              <div><small>文件</small><strong id="completed-file-count">7</strong></div>
+            </div>
+            <div class="transcript-panel">
+              <div class="panel-title"><span>文本预览</span><button id="copy-button" type="button">复制</button></div>
+              <pre id="transcript-preview"></pre>
+            </div>
+            <div class="download-row" id="download-row">
+              <span>下载类型</span>
+              <label class="export-option"><input type="checkbox" data-task-export-type value="text" checked /><i></i>文本文件</label>
+              <label class="export-option"><input type="checkbox" data-task-export-type value="subtitle" /><i></i>字幕文件</label>
+              <a id="task-export" class="primary-download">下载</a>
+            </div>
+            <p class="warning-text" id="warning-text"></p>
+            <div class="task-actions"><button type="button" id="delete-completed-task" class="danger-button">删除任务</button></div>
+          </div>
+
+          <div class="failed-result" id="failed-result" hidden>
+            <span class="failure-mark">!</span>
+            <h3>任务没有完成</h3>
+            <p id="failure-message"></p>
+            <button type="button" id="failed-back" class="detail-back" hidden>← 返回任务队列</button>
+            <div class="failed-actions">
+              <button type="button" id="retry-failed-task">重试任务</button>
+              <button type="button" id="delete-failed-task" class="danger-button">删除任务</button>
+              <button type="button" id="reset-button">重新选择素材</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <div><span class="step-number">03</span><h2>最近任务</h2></div>
+          <button type="button" id="refresh-history">刷新</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <p class="history-empty">暂无历史任务</p>
+        </div>
+      </section>
+
+      <section class="storage-section">
+        <div class="section-heading">
+          <div><span class="step-number">04</span><h2>存储空间</h2></div>
+          <button type="button" id="refresh-storage">刷新</button>
+        </div>
+        <div class="storage-grid">
+          <div><small>工作文件</small><strong id="storage-work">—</strong></div>
+          <div><small>输出结果</small><strong id="storage-output">—</strong></div>
+          <div><small>上传素材</small><strong id="storage-uploads">—</strong></div>
+          <div><small>识别缓存</small><strong id="storage-cache">—</strong></div>
+        </div>
+        <div class="storage-actions">
+          <p id="storage-summary">正在读取空间占用…</p>
+          <button type="button" data-cleanup-scope="temporary">清理临时文件</button>
+          <button type="button" data-cleanup-scope="cache">清理识别缓存</button>
+          <button type="button" id="clear-all-tasks" class="danger-button">清空所有任务</button>
+        </div>
+      </section>
+    </main>
+
+    <footer><span>Video2Txt v<span id="app-version">1.0.0</span></span><span>本地处理 · 可追溯融合</span></footer>
+    <script src="/app.js?v=20260723-batch-reset" defer></script>
+  </body>
+</html>
